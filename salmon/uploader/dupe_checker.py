@@ -78,6 +78,10 @@ def _prompt_for_recent_upload_results(gazelle_site, recent_uploads, searchstr, o
             click.secho(f"{u[1]} - {u[2]} ", fg="cyan", nl=False)  # artist - title
             click.echo(f"| {gazelle_site.base_url}/torrents.php?torrentid={u[0]}")
 
+    # if no recent uploads, assume new group
+    if not recent_uploads:
+        return None
+
     # Now prompt for user action
     while True:
         prompt_text = (

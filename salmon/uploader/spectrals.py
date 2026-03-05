@@ -49,33 +49,12 @@ def check_spectrals(
             fg="cyan",
         )
         return None, None
-    click.secho("\nChecking lossy master / spectrals...", fg="cyan", bold=True)
+    click.secho("\nChecking spectrals...", fg="cyan", bold=True)
     spectrals_path = create_specs_folder(path)
-    if not spectral_ids:
-        all_spectral_ids = generate_spectrals_all(path, spectrals_path, audio_info)
-        while True:
-            view_spectrals(spectrals_path, all_spectral_ids)
-            if lossy_master is None and check_lma:
-                lossy_master = prompt_lossy_master(force_prompt_lossy_master)
-                if lossy_master is not None:
-                    break
-            else:
-                break
-    else:
-        if lossy_master is None:
-            lossy_master = prompt_lossy_master(force_prompt_lossy_master)
+    all_spectral_ids = generate_spectrals_all(path, spectrals_path, audio_info)
+    view_spectrals(spectrals_path, all_spectral_ids)
 
-    if not spectral_ids:
-        spectral_ids = prompt_spectrals(
-            all_spectral_ids,
-            lossy_master,
-            check_lma,
-            force_prompt_lossy_master=force_prompt_lossy_master,
-        )
-    else:
-        spectral_ids = generate_spectrals_ids(path, spectral_ids, spectrals_path, audio_info)
-
-    return lossy_master, spectral_ids
+    return lossy_master, all_spectral_ids
 
 
 def handle_spectrals_upload_and_deletion(spectrals_path, spectral_ids, delete_spectrals=True):

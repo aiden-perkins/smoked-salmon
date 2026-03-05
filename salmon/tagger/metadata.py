@@ -26,7 +26,9 @@ def get_metadata(path, tags, rls_data=None):
     kwargs = dict(artists=[a for a, _ in rls_data["artists"]], album=rls_data["title"]) if rls_data else {}
     search_results = run_metasearch(searchstrs, filter=False, track_count=len(tags), **kwargs)
     choices = _print_search_results(search_results, rls_data)
+    
     metadata, source_url = _select_choice(choices, rls_data)
+    
     remove_various_artists(metadata["tracks"])
     metadata = fix_hardcore_genre(metadata)
     return metadata, source_url
@@ -84,7 +86,9 @@ def _select_choice(choices, rls_data):
         rls_data["urls"] = []
 
     while True:
-        if choices:
+        if len(choices) == 1:
+            res = '*01'
+        elif choices:
             res = click.prompt(
                 click.style(
                     "\nWhich metadata results would you like to use? Other "
@@ -93,6 +97,7 @@ def _select_choice(choices, rls_data):
                 ),
                 type=click.STRING,
             )
+            res = '*' + res
         else:
             res = click.prompt(
                 click.style(

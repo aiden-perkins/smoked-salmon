@@ -1,7 +1,8 @@
 import asyncio
 import html
 import re
-from collections import namedtuple
+import time
+from collections import namedtuple, deque
 from json.decoder import JSONDecodeError
 from urllib.parse import parse_qs, urlparse
 
@@ -20,6 +21,9 @@ from salmon.errors import (
 )
 
 loop = asyncio.get_event_loop()
+
+RATE_LIMIT_REQUESTS = 5
+RATE_LIMIT_PERIOD = 10
 
 ARTIST_TYPES = [
     "main",
@@ -59,6 +63,9 @@ class BaseGazelleApi:
 
         self.release_types = RELEASE_TYPES
 
+        self._rate_limit_lock = asyncio.Lock()
+        self._request_timestamps = deque()
+
         self.session = requests.Session()
         self.session.headers.update(self.headers)
 
@@ -86,16 +93,17 @@ class BaseGazelleApi:
         self.passkey = acctinfo["passkey"]
 
     @sleep_and_retry
-    @limits(10, 10)
+    @limits(RATE_LIMIT_REQUESTS, RATE_LIMIT_PERIOD)
     async def request(self, action, **kwargs):
         """
         Make a request to the site API, accomodating the rate limit.
         This uses the ratelimit library to ensure that
-        the 10 requests / 10 seconds rate limit isn't violated, while allowing
+        the 5 requests / 10 seconds rate limit isn't violated, while allowing
         short bursts of requests without a 2 second wait after each one
         (at the expense of a potentially longer wait later).
         """
 
+        await self._throttle()
         url = self.base_url + "/ajax.php"
         params = {"action": action, **kwargs}
         try:
@@ -136,6 +144,21 @@ class BaseGazelleApi:
             else:
                 raise RequestFailedError(resp_json["error"])
         return resp_json["response"]
+
+    async def _throttle(self):
+        async with self._rate_limit_lock:
+            while True:
+                now = time.monotonic()
+                while self._request_timestamps and now - self._request_timestamps[0] >= RATE_LIMIT_PERIOD:
+                    self._request_timestamps.popleft()
+                if len(self._request_timestamps) < RATE_LIMIT_REQUESTS:
+                    self._request_timestamps.append(now)
+                    return
+                sleep_for = RATE_LIMIT_PERIOD - (now - self._request_timestamps[0])
+                if sleep_for > 0:
+                    await asyncio.sleep(sleep_for)
+                else:
+                    await asyncio.sleep(0)
 
     async def torrentgroup(self, group_id):
         """Get information about a torrent group."""

@@ -13,14 +13,7 @@ from salmon.errors import NotAValidInputFile
 def upload_upconvert_test(path):
     any_upconverts = test_upconverted(path)
     if any_upconverts:
-        if click.confirm(
-            click.style(
-                "Possible upconverts detected. Would you like to quit uploading?",
-                fg="red",
-            ),
-            default=True,
-        ):
-            raise click.Abort
+        raise click.Abort
     else:
         click.secho(
             click.style(
@@ -51,7 +44,7 @@ def _upconvert_check_handler(filepath, _=None):
         upconv, wasted_bits, bitdepth, error = check_upconvert(filepath)
         return upconv, wasted_bits, bitdepth, filepath, error
     except NotAValidInputFile as e:
-        return None, None, None, filepath, "Unable to check file: " + str(e)
+        return True, None, None, filepath, "Unable to check file: " + str(e)
 
 
 def check_upconvert(filepath):
@@ -59,7 +52,7 @@ def check_upconvert(filepath):
         mut = mutagen.File(filepath)
         bitdepth = mut.info.bits_per_sample
     except AttributeError:
-        return None, None, None, "This is not a FLAC file."
+        return True, None, None, "This is not a FLAC file."
 
     if bitdepth == 16:
         return None, None, bitdepth, "This is a 16bit FLAC file."
@@ -74,7 +67,7 @@ def check_upconvert(filepath):
             wasted_bits_list.append(int(r[1]))
 
     wasted_bits = math.ceil(sum(wasted_bits_list) / len(wasted_bits_list))
-    if wasted_bits >= 8:
+    if wasted_bits >= 1:
         return True, wasted_bits, bitdepth, None
     else:
         return False, wasted_bits, bitdepth, None

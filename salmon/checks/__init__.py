@@ -91,4 +91,8 @@ def mqa_test(path):
                 if any(f.lower().endswith(ext) for ext in [".mp3", ".flac"]):
                     filepath = os.path.join(root, f)
                     """ Only check the first file """
-                    return bool(check_mqa(filepath))
+                    if check_mqa(filepath):
+                        click.secho(f"MQA syncword present in '{filepath}'", fg="red", bold=True)
+                        raise click.Abort
+                    else:
+                        return False

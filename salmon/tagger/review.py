@@ -33,14 +33,15 @@ def review_metadata(metadata, validator):
     }
     while True:
         _print_metadata(metadata)
-        r = click.prompt(
-            click.style(
-                "\nAre there any metadata fields you would like to edit? [a]rtists, "
-                "artist a[l]iases, [t]itle, [g]enres, [r]elease type, [y]ears, "
-                "[e]dition info, [c]omment, trac[k]s, [u]rls, [n]othing",
-                fg="magenta",
-            )
-        )
+        # r = click.prompt(
+        #     click.style(
+        #         "\nAre there any metadata fields you would like to edit? [a]rtists, "
+        #         "artist a[l]iases, [t]itle, [g]enres, [r]elease type, [y]ears, "
+        #         "[e]dition info, [c]omment, trac[k]s, [u]rls, [n]othing",
+        #         fg="magenta",
+        #     )
+        # )
+        r = 'n'
         r_let = r[0].lower()
         try:
             edit_functions[r_let](metadata)

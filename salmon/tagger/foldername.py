@@ -35,9 +35,10 @@ def rename_folder(path, metadata, auto_rename, check=True):
         click.echo(f"Old folder name        : {old_base}")
         click.echo(f"New pending folder name: {new_base}")
 
-        user_rename_choice = click.confirm(
-            click.style("\nWould you like to replace the original folder name?", fg="magenta"), default=True
-        )
+        if not auto_rename:
+            user_rename_choice = click.confirm(
+                click.style("\nWould you like to replace the original folder name?", fg="magenta"), default=True
+            )
 
         new_base = _edit_folder_interactive(new_base, auto_rename) if auto_rename or user_rename_choice else old_base
 

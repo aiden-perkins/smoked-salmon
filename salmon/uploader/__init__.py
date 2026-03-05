@@ -518,25 +518,20 @@ def edit_metadata(
                     bold=True,
                 )
                 raise click.Abort()
-            if not result[0] and (
-                cfg.upload.yes_all
-                or click.confirm(
-                    click.style("\nDo you want to sanitize this upload?", fg="magenta"),
-                    default=True,
-                )
-            ):
+            if not result[0]:
                 click.secho("\nSanitizing files...", fg="cyan", bold=True)
                 if sanitize_integrity(path):
                     click.secho("Sanitization complete", fg="green")
                 else:
                     click.secho("Some files failed sanitization", fg="red", bold=True)
+                    raise click.Abort()
 
-        if cfg.upload.yes_all or click.confirm(
-            click.style("\nWould you like to upload the torrent? (No to re-run metadata section)", fg="magenta"),
-            default=True,
-        ):
-            metadata["tags"] = convert_genres(metadata["genres"])
-            break
+        # if cfg.upload.yes_all or click.confirm(
+        #     click.style("\nWould you like to upload the torrent? (No to re-run metadata section)", fg="magenta"),
+        #     default=True,
+        # ):
+        metadata["tags"] = convert_genres(metadata["genres"])
+        break
 
         # Refresh tags to accomodate differences in file structure.
         tags = gather_tags(path)
@@ -687,12 +682,7 @@ def prompt_downconversion_choice(rls_data, track_data):
 
     while True:
         try:
-            choices = click.prompt(
-                click.style(
-                    '\nSelect formats to convert (space-separated list of IDs, "0" for none, "*" for all)', fg="magenta"
-                ),
-                default="*",
-            )
+            choices = '*'
 
             if choices.strip() == "0":
                 break
